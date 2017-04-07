@@ -12,6 +12,9 @@ var port = args[1];
 console.log(`H: ${host} P: ${port}`);
 var inputProcessor;
 
+var stdin = process.stdin;
+stdin.setRawMode( true );
+
 //create socket
 const connection = net.connect(port, host, () => {  
   console.log('Connected to server!');
@@ -22,10 +25,8 @@ const connection = net.connect(port, host, () => {
   //register socket data callback
   inputProcessor.on('message', (message) => {
 	var keyBuffer = createKeyBuffer(message.data.length);
-	console.log(message.data);
 	xorInplace(message.data, keyBuffer);
-	console.log(message.data);
-	connection.write(message.data);
+	connection.write(new Buffer.from(message.data));
   });
 });
 
@@ -34,11 +35,15 @@ connection.on('data', (data) => {
 	//prepare key buffer 
 	var keyBuffer = createKeyBuffer(data.length);
 	//xor incoming data
-	xorInplace(data, keyBufffer);
+	xorInplace(data, keyBuffer);
 	//write buffer to stdout
-	proccess.stdout.write(data);
+	process.stdout.write(data);
 });
 
 function createKeyBuffer(len) {
-	return new Array(len + 1).join(key);
+	return new Buffer(new Array(len + 1).join(key), 'hex');
+}
+
+function bufferFromArray(array) {
+    return new Buffer(array);
 }
